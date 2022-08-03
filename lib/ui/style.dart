@@ -29,5 +29,5 @@ TextStyle get subTitleStyle {
   return GoogleFonts.lato(
       fontSize: 14,
       fontWeight: FontWeight.bold,
-      color: Get.isDarkMode ? Colors.grey[100] : Colors.grey[400]);
+      color: Get.isDarkMode ? Colors.grey[100] : Colors.grey[600]);
 }
