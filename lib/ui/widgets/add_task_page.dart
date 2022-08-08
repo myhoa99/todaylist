@@ -263,6 +263,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       // add to databasse
       setState(() {
         _addTasktoDB();
+
         Get.back();
       });
     } else if (_titleController.text.isEmpty || _noteController.text.isEmpty) {

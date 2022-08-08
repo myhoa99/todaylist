@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:futter_to_do_app/ui/widgets/notify_page.dart';
 import 'package:get/get.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
+import '../model/task.dart';
 
 class NotifyHelper {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin(); //
 
   initializeNotification() async {
-    tz.initializeTimeZones();
+    _configureLocalTimezoe();
     final IOSInitializationSettings initializationSettingsIOS =
         IOSInitializationSettings(
             requestSoundPermission: false,
@@ -18,7 +22,7 @@ class NotifyHelper {
             onDidReceiveLocalNotification: onDidReceiveLocalNotification);
 
     final AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings("appicon");
+        AndroidInitializationSettings("ic_launcher-web");
 
     final InitializationSettings initializationSettings =
         InitializationSettings(
@@ -38,27 +42,26 @@ class NotifyHelper {
     var platformChannelSpecifics = new NotificationDetails(
         android: androidPlatformChannelSpecifics,
         iOS: iOSPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      title,
-      body,
-      platformChannelSpecifics,
-      payload: 'It could be anything you pass',
-    );
+    await flutterLocalNotificationsPlugin
+        .show(0, title, body, platformChannelSpecifics, payload: title);
   }
 
-  scheduledNotification() async {
+  scheduledNotification(int hour, int minutes, Task task) async {
+    int newTimes = minutes;
     await flutterLocalNotificationsPlugin.zonedSchedule(
-        0,
-        'scheduled title',
-        'theme changes 5 seconds ago',
-        tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+        task.id!.toInt(),
+        task.title,
+        task.note,
+        _convertTime(hour, minutes),
+        // tz.TZDateTime.now(tz.local).add(Duration(seconds: newTimes)),
         const NotificationDetails(
             android: AndroidNotificationDetails(
                 'your channel id', 'your channel name')),
         androidAllowWhileIdle: true,
         uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime);
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+        payload: "${task.title}|" + "${task.note}|");
   }
 
   void requestIOSPermissions() {
@@ -83,8 +86,26 @@ class NotifyHelper {
     } else {
       print("Notification Done");
     }
-    Get.to(() => Container(
-          color: Colors.white,
-        ));
+    if (payload == "Theme Changed") {
+      print('Nothing');
+    } else {
+      Get.to(() => NotifyPage(label: payload));
+    }
+  }
+
+  tz.TZDateTime _convertTime(int hour, int minutes) {
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime scheduledDate =
+        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minutes);
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+    return scheduledDate;
+  }
+
+  Future<void> _configureLocalTimezoe() async {
+    tz.initializeTimeZones();
+    final String timeZone = await FlutterNativeTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZone));
   }
 }

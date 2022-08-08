@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.futter_to_do_app">
    <application
-        android:label="futter_to_do_app"
+        android:label="Hana's plan"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
